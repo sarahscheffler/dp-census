@@ -21,6 +21,9 @@ def hutington_hill(populations, number_of_seats):
     quotas = []
     total = 0
     for state in populations:
+      if state['name'] == 'District of Columbia':
+        continue
+    
       quota = state['population'] / D
       flr = math.floor(quota)
       cel = math.ceil(quota)
@@ -37,15 +40,12 @@ def hutington_hill(populations, number_of_seats):
   while True:
     total, quotas = iter(D)
     if total == number_of_seats:
+      print D
       return quotas
     elif total < number_of_seats:
       D = D - 1
     else:
       D = D + 1
-
-
-
-
 
 if __name__ == '__main__':
   import csv
