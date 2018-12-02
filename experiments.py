@@ -4,9 +4,9 @@ from states import STATE_ORDER, ABBR_TO_NAME, NAME_TO_ABBR
 EPSILONS = [1**x for x in range(0, -6, -1)]
 
 POPULATIONS_FILE = "census_data/historical_populations.csv"
-APPORTIONMENT_FILE = "census_data/historical_seats_apportioned.csv"
+APPORTIONMENT_FILE = "census_data/house_apportionments.csv"
 
-def parse_historical_populations(filename):
+def parse_historical_populations(filename=POPULATIONS_FILE):
     census_years = []
     total_us_pop = []
     state_pops = []
@@ -35,26 +35,43 @@ def parse_historical_populations(filename):
 
     return set(census_years), total_us_pop, state_pops
 
-def parse_historical_seats_apportioned(filename):
+def parse_historical_seats_apportioned(filename=APPORTIONMENT_FILE):
     census_years = []
     total_seats_apportioned = []
+    state_seats_apportioned = []
 
     with open(filename) as csvfile:
         reader = csv.reader(csvfile)
 
-        census_years = set(map(int, next(reader)[1:]))
-        total_seats_apportioned = dict(zip(census_years, list(map(int, next(reader)[1:]))))
+        census_years = list(map(int, next(reader)[1:]))
+        total_seats_apportioned = { year: 0 for year in census_years }
+        state_seats_apportioned = { year: dict() for year in census_years }
+        for row in reader:
+            name = row[0]
+            for i in range(len(row[1:])):
+                year = census_years[i]
+                seats = row[1:][i]
+                state_seats_apportioned[year][name] = None if seats=='-' else int(seats)
+                total_seats_apportioned[year] += 0 if seats=='-' else int(seats)
 
     # Manually add 1920 (equal to 1910 reult) and 2017 (equal to 2010 result)
-    census_years.add(1920)
-    census_years.add(2017)
+    census_years.append(1920)
+    census_years.append(2017)
+    census_years.sort()
+
     total_seats_apportioned[1920] = total_seats_apportioned[1910]
     total_seats_apportioned[2017] = total_seats_apportioned[2010]
 
-    return total_seats_apportioned
+    state_seats_apportioned[1920] = dict(state_seats_apportioned[1910])
+    state_seats_apportioned[2017] = dict(state_seats_apportioned[2010])
 
-census_years, total_us_pop, state_pops = parse_historical_populations(POPULATIONS_FILE)
-total_seats_apportioned = parse_historical_seats_apportioned(APPORTIONMENT_FILE)
+    return set(census_years), total_seats_apportioned, state_seats_apportioned
 
+if __name__ == '__main__':
+    census_years, total_us_pop, state_pops = parse_historical_populations(POPULATIONS_FILE)
+    census_years, total_seats_apportioned, state_seats_apportioned = parse_historical_seats_apportioned(APPORTIONMENT_FILE)
 
+    print(census_years)
+    print(total_seats_apportioned)
+    print(state_seats_apportioned)
 
