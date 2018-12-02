@@ -5,7 +5,7 @@ import math
 
 
 # Hutington Hill https://www.maa.org/press/periodicals/convergence/apportioning-representatives-in-the-united-states-congress-hills-method-of-apportionment
-def hutington_hill(total_population, populations, number_of_seats, ignore=dict()):
+def huntington_hill(total_population, populations, number_of_seats, ignore=dict()):
     '''
     total_population: number: total population of the United States.
     populations:      maps state code (two letters) to population of that state (number).
@@ -14,7 +14,7 @@ def hutington_hill(total_population, populations, number_of_seats, ignore=dict()
     '''
     D = total_population / float(number_of_seats)
 
-    # A single iteration of hutington_hill, computes for a given ratio D
+    # A single iteration of huntington_hill, computes for a given ratio D
     # and returns resulting quotas and total number of apportioned seats
     def iter(D):
         quotas = dict()
@@ -60,7 +60,7 @@ if __name__ == '__main__':
     for year in sorted(domain):
         if year in [1920, 2017]: continue;
 
-        actual_output = hutington_hill(total_population[year], state_population[year], total_seats[year], ignore=state_seats[year])
+        actual_output = huntington_hill(total_population[year], state_population[year], total_seats[year], ignore=state_seats[year])
         if len(sys.argv) > 1:
             for key in sorted(actual_output.keys()):
                 print(key, actual_output[key], state_seats[year][key], '' if actual_output[key] == state_seats[year][key] else '----------------')
