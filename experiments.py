@@ -1,8 +1,10 @@
 import csv
 import numpy as np
 from states import STATE_ORDER, ABBR_TO_NAME, NAME_TO_ABBR
+from apportionment import huntington_hill
 
 EPSILONS = [10**x for x in range(-1, -6, -1)]
+REPS = 10
 
 POPULATIONS_FILE = "census_data/historical_populations.csv"
 APPORTIONMENT_FILE = "census_data/house_apportionments.csv"
@@ -77,14 +79,49 @@ def parse_historical_seats_apportioned(filename=APPORTIONMENT_FILE):
 #########################################################
 
 # TEMPORARY NOISE FUNCTION
-def laplace_noise(dims):
+def laplace_noise(dims, epsilon):
     # 1/epsilon because GS of count is 1
     return np.random.laplace(scale= 1/epsilon, size = dims)
 
 def run_experiment():
-    for epsilon in EPSILONS:
-        print(epsilon)
-        print(laplace_noise(10))
+    census_years, total_us_pop, state_pops = parse_historical_populations(POPULATIONS_FILE)
+    census_years, total_seats_apportioned, state_seats_apportioned = parse_historical_seats_apportioned(APPORTIONMENT_FILE)
+    for year in census_years:
+        print("=================================")
+        for epsilon in EPSILONS:
+            print("---------------------------------")
+            true_population = total_us_pop[year]
+            true_state_pop = state_pops[year]
+            true_seats = total_seats_apportioned[year]
+            true_answer = huntington_hill(true_population, true_state_pop, true_seats)
+
+            if any(count is None for count in true_state_pop.values()):
+                print("Not doing year %d because there is a None count" % year)
+                continue
+
+            for rep in range(REPS):
+                noises = laplace_noise(len(true_state_pop), epsilon)
+                population = true_population + sum(noises)
+                state_pop = dict()
+                counter = 0 # todo gross
+                for state in true_state_pop.keys():
+                    state_pop[state] = true_state_pop[state] + noises[counter]
+                    counter += 1
+                answer = huntington_hill(population, state_pop, true_seats)
+                if true_answer != answer:
+                    print("epsilon: %f, year: %d, rep: %d, Different" % (epsilon, year, rep))
+                    for state in true_answer:
+                        if true_answer[state] != answer[state]:
+                            print("Expected answer: ", state, true_answer[state])
+                            print("Actual answer: ", state, answer[state])
+                else:
+                    print("epsilon: %f, year: %d, rep: %d, Same" % (epsilon, year, rep))
+
+run_experiment()
+
+
+                
+
 
 
 
@@ -92,7 +129,7 @@ if __name__ == '__main__':
     census_years, total_us_pop, state_pops = parse_historical_populations(POPULATIONS_FILE)
     census_years, total_seats_apportioned, state_seats_apportioned = parse_historical_seats_apportioned(APPORTIONMENT_FILE)
 
-    print(census_years)
-    print(total_seats_apportioned)
-    print(state_seats_apportioned)
+    #print(census_years)
+    #print(total_seats_apportioned)
+    #print(state_seats_apportioned)
 
