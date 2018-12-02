@@ -1,10 +1,15 @@
 import csv
+import numpy as np
 from states import STATE_ORDER, ABBR_TO_NAME, NAME_TO_ABBR
 
-EPSILONS = [1**x for x in range(0, -6, -1)]
+EPSILONS = [10**x for x in range(-1, -6, -1)]
 
 POPULATIONS_FILE = "census_data/historical_populations.csv"
 APPORTIONMENT_FILE = "census_data/historical_seats_apportioned.csv"
+
+#########################################################
+# Parsing functions
+#########################################################
 
 def parse_historical_populations(filename):
     census_years = []
@@ -55,6 +60,19 @@ def parse_historical_seats_apportioned(filename):
 
 census_years, total_us_pop, state_pops = parse_historical_populations(POPULATIONS_FILE)
 total_seats_apportioned = parse_historical_seats_apportioned(APPORTIONMENT_FILE)
+
+#########################################################
+# Experiments
+#########################################################
+
+# TEMPORARY NOISE FUNCTION
+def laplace_noise(dims):
+    # 1/epsilon because GS of count is 1
+    return np.random.laplace(scale= 1/epsilon, size = dims)
+
+for epsilon in EPSILONS:
+    print(epsilon)
+    print(laplace_noise(10))
 
 
 
