@@ -3,6 +3,8 @@ import math
 import numpy as np
 from scipy.optimize import fsolve
 
+# based on work in: https://eprint.iacr.org/2016/943.pdf
+
 def poisson_noise(lambda_, c, n):
 
     val = float(lambda_ + c*math.sqrt(lambda_))
