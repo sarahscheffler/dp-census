@@ -1,6 +1,6 @@
-STATE_ORDER = ['AK', 'AL', 'AR', 'AS', 'AZ', 'CA', 'CO', 'CT', 'DC', 'DE', 'FL', 'GA', 'GU', 'HI', 'IA', 'ID', 'IL',
-        'IN', 'KS', 'KY', 'LA', 'MA', 'MD', 'ME', 'MI', 'MN', 'MO', 'MP', 'MS', 'MT', 'NA', 'NC', 'ND', 'NE', 'NH',
-        'NJ', 'NM', 'NV', 'NY', 'OH', 'OK', 'OR', 'PA', 'PR', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VA', 'VI', 'VT',
+STATE_ORDER = ['AK', 'AL', 'AR', 'AZ', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'IA', 'ID', 'IL',
+        'IN', 'KS', 'KY', 'LA', 'MA', 'MD', 'ME', 'MI', 'MN', 'MO', 'MS', 'MT', 'NC', 'ND', 'NE', 'NH',
+        'NJ', 'NM', 'NV', 'NY', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VA', 'VT',
         'WA', 'WI', 'WV', 'WY']
 
 ABBR_TO_NAME = {
@@ -16,7 +16,7 @@ ABBR_TO_NAME = {
     'DE': 'Delaware',
     'FL': 'Florida',
     'GA': 'Georgia',
-    'GU': 'Guam',
+    #'GU': 'Guam',
     'HI': 'Hawaii',
     'IA': 'Iowa',
     'ID': 'Idaho',
@@ -47,7 +47,7 @@ ABBR_TO_NAME = {
     'OK': 'Oklahoma',
     'OR': 'Oregon',
     'PA': 'Pennsylvania',
-    'PR': 'Puerto Rico',
+    #'PR': 'Puerto Rico',
     'RI': 'Rhode Island',
     'SC': 'South Carolina',
     'SD': 'South Dakota',

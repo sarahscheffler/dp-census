@@ -4,10 +4,12 @@ from states import STATE_ORDER, ABBR_TO_NAME, NAME_TO_ABBR
 from apportionment import huntington_hill
 
 EPSILONS = [10**x for x in range(-1, -6, -1)]
-REPS = 10
+REPS = 100
 
 POPULATIONS_FILE = "census_data/historical_populations.csv"
 APPORTIONMENT_FILE = "census_data/house_apportionments.csv"
+OUTPUT_FOLDER = "results"
+VERBOSE = False
 
 #########################################################
 # Parsing functions
@@ -84,50 +86,57 @@ def laplace_noise(dims, epsilon):
     return np.random.laplace(scale= 1/epsilon, size = dims)
 
 def run_experiment():
+    # Writes a function that returns the changes that must be made TO THE TRUE APPORTIONMENT in order to equal the
+    # NOISY RESULT
+
     census_years, total_us_pop, state_pops = parse_historical_populations(POPULATIONS_FILE)
     census_years, total_seats_apportioned, state_seats_apportioned = parse_historical_seats_apportioned(APPORTIONMENT_FILE)
+
     for year in census_years:
-        print("=================================")
-        for epsilon in EPSILONS:
-            print("---------------------------------")
-            true_population = total_us_pop[year]
-            true_state_pop = state_pops[year]
-            true_seats = total_seats_apportioned[year]
-            true_answer = huntington_hill(true_population, true_state_pop, true_seats)
+        print("year: ", str(year))
+        if VERBOSE: print("=================================")
 
-            if any(count is None for count in true_state_pop.values()):
-                print("Not doing year %d because there is a None count" % year)
-                continue
+        true_population = total_us_pop[year]
+        true_state_pop = state_pops[year]
+        true_seats = total_seats_apportioned[year]
+        true_answer = huntington_hill(true_population, true_state_pop, true_seats)
 
-            for rep in range(REPS):
-                noises = laplace_noise(len(true_state_pop), epsilon)
-                population = true_population + sum(noises)
-                state_pop = dict()
-                counter = 0 # todo gross
-                for state in true_state_pop.keys():
-                    state_pop[state] = true_state_pop[state] + noises[counter]
-                    counter += 1
-                answer = huntington_hill(population, state_pop, true_seats)
-                if true_answer != answer:
-                    print("epsilon: %f, year: %d, rep: %d, Different" % (epsilon, year, rep))
-                    for state in true_answer:
-                        if true_answer[state] != answer[state]:
-                            print("Expected answer: ", state, true_answer[state])
-                            print("Actual answer: ", state, answer[state])
-                else:
-                    print("epsilon: %f, year: %d, rep: %d, Same" % (epsilon, year, rep))
+        if any(count is None for count in true_state_pop.values()):
+            if VERBOSE: print("Not doing year %d because there is a None count" % year)
+            continue
 
-run_experiment()
+        with open(OUTPUT_FOLDER + "/" + str(year) + ".csv", 'w') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(["epsilon", "rep"] + STATE_ORDER)
 
+            for epsilon in EPSILONS:
+                print("  epsilon: ", str(epsilon))
+                if VERBOSE: print("---------------------------------")
 
-                
-
-
+                for rep in range(REPS):
+                    noises = laplace_noise(len(true_state_pop), epsilon)
+                    population = true_population + sum(noises)
+                    state_pop = dict()
+                    for (state, i) in zip(true_state_pop.keys(), range(len(true_state_pop))):
+                        state_pop[state] = true_state_pop[state] + noises[i]
+                    answer = huntington_hill(population, state_pop, true_seats)
+                    writer.writerow([epsilon, rep] + [answer[st] - true_answer[st] for st in STATE_ORDER])
+                    if true_answer != answer:
+                        if VERBOSE: print("epsilon: %f, year: %d, rep: %d, Different" % (epsilon, year, rep))
+                        for state in true_answer:
+                            if true_answer[state] != answer[state]:
+                                diff = answer[state] - true_answer[state]
+                                if VERBOSE: print("    ", state, "+" if diff > 0 else " " if diff == 0 else "", diff)
+                    else:
+                        if VERBOSE: print("epsilon: %f, year: %d, rep: %d, Same" % (epsilon, year, rep))
+    print("Done!  Results are in ", OUTPUT_FOLDER)
 
 
 if __name__ == '__main__':
     census_years, total_us_pop, state_pops = parse_historical_populations(POPULATIONS_FILE)
     census_years, total_seats_apportioned, state_seats_apportioned = parse_historical_seats_apportioned(APPORTIONMENT_FILE)
+
+    run_experiment()
 
     #print(census_years)
     #print(total_seats_apportioned)

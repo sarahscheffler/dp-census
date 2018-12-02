@@ -26,10 +26,10 @@ def huntington_hill(total_population, populations, number_of_seats, ignore=dict(
 
             quota = population / D
             flr = math.floor(quota)
-            cel = math.ceil(quota)
+            cel = math.ceil(quota) # should be different from flr if they're integers
 
             # round according to geometric mean
-            geomean = math.sqrt(flr) * math.sqrt(cel)
+            geomean = math.sqrt(flr * cel)
             apportionment = cel if quota > geomean else flr
 
             total += apportionment
