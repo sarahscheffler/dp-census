@@ -4,7 +4,7 @@ from states import STATE_ORDER, ABBR_TO_NAME, NAME_TO_ABBR
 from apportionment import huntington_hill
 
 EPSILONS = [10**x for x in range(-1, -6, -1)]
-REPS = 1000
+REPS = 100
 
 POPULATIONS_FILE = "census_data/historical_populations.csv"
 APPORTIONMENT_FILE = "census_data/house_apportionments.csv"
