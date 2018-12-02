@@ -4,7 +4,7 @@ Functions that implement interesting apportionment functions
 import math
 
 
-# Hutington Hill https://www.maa.org/press/periodicals/convergence/apportioning-representatives-in-the-united-states-congress-hills-method-of-apportionment
+# Hutington Hill's method https://www.maa.org/press/periodicals/convergence/apportioning-representatives-in-the-united-states-congress-hills-method-of-apportionment
 def huntington_hill(total_population, populations, number_of_seats, ignore=dict()):
     '''
     total_population: number: total population of the United States.
@@ -45,6 +45,266 @@ def huntington_hill(total_population, populations, number_of_seats, ignore=dict(
             D = D - 1
         else:
             D = D + 1
+
+# Webster's method https://www.maa.org/press/periodicals/convergence/apportioning-representatives-in-the-united-states-congress-websters-method-of-apportionment
+def webster(total_population, populations, number_of_seats, ignore=dict()):
+    '''
+    total_population: number: total population of the United States.
+    populations:      maps state code (two letters) to population of that state (number).
+    number_of_seats:  number.
+    Returns: a map from state codes to seats allocated to that state.
+    '''
+    D = total_population / float(number_of_seats)
+
+    def iter(D):
+        quotas = dict()
+        total = 0
+        for state, population in populations.items():
+            if population is None or (state in ignore and ignore[state] is None):
+                quotas[state] = None
+                continue;
+
+            quota = population / D
+            apportionment = round(quota)
+
+            total += apportionment
+            quotas[state] = int(apportionment)
+
+        return (total, quotas)
+
+    while True:
+        total, quotas = iter(D)
+        if total == number_of_seats:
+            return quotas
+        elif total < number_of_seats:
+            D = D - 1
+        else:
+            D = D + 1
+
+
+# Dean's method https://www.maa.org/press/periodicals/convergence/apportioning-representatives-in-the-united-states-congress-deans-method-of-apportionment
+def dean(total_population, populations, number_of_seats, ignore=dict()):
+    '''
+    total_population: number: total population of the United States.
+    populations:      maps state code (two letters) to population of that state (number).
+    number_of_seats:  number.
+    Returns: a map from state codes to seats allocated to that state.
+    '''
+    D = total_population / float(number_of_seats)
+
+    def iter(D):
+        quotas = dict()
+        total = 0
+        for state, population in populations.items():
+            if population is None or (state in ignore and ignore[state] is None):
+                quotas[state] = None
+                continue;
+
+            quota = population / D
+            flr = math.floor(quota)
+            cel = math.ceil(quota)
+
+            # round according to harmonic mean
+            harmonicmean = (n*(n+1))/(n+0.5)
+            apportionment = cel if quota > harmonicmean else flr
+
+            total += apportionment
+            quotas[state] = int(apportionment)
+
+        return (total, quotas)
+
+    while True:
+        total, quotas = iter(D)
+        if total == number_of_seats:
+            return quotas
+        elif total < number_of_seats:
+            D = D - 1
+        else:
+            D = D + 1
+
+
+# Hamilton's method https://www.maa.org/press/periodicals/convergence/apportioning-representatives-in-the-united-states-congress-hamiltons-method-of-apportionment
+def hamilton(total_population, populations, number_of_seats, ignore=dict()):
+    '''
+    total_population: number: total population of the United States.
+    populations:      maps state code (two letters) to population of that state (number).
+    number_of_seats:  number.
+    Returns: a map from state codes to seats allocated to that state.
+    '''
+    D = total_population / float(number_of_seats)
+
+    def iter(D):
+        quotas = dict()
+        remainders = []
+        total = 0
+        for state, population in populations.items():
+            if population is None or (state in ignore and ignore[state] is None):
+                quotas[state] = None
+                continue;
+
+            # first assign seats based on a rounded down state quota
+            # and keep the remainder
+            quota = population / D
+            apportionment = math.floor(quota)
+            remainder = quota - apportionment
+
+            total += apportionment
+            quotas[state] = int(apportionment)
+            remainders.append((remainder,state))
+
+        return (total, quotas, remainders)
+
+    total, quotas, remainders = iter(D)
+
+    #if there are no surplus of seats
+    #then we are done
+    if total == number_of_seats:
+        return quotas
+
+    #assign the surplus of seats to the states
+    #with the largest remainders
+    elif total < number_of_seats:
+        surplus = number_of_seats - total
+        remainders.sort(reverse=True)
+
+        for r,s in remainders:
+            if(surplus > 0 and r > 0):
+                if(r > 0):
+                    quotas[s] += 1
+                    surplus -=1
+            else:
+                return  quotas
+
+# Lowndes's method https://www.maa.org/press/periodicals/convergence/apportioning-representatives-in-the-united-states-congress-lowndes-method-of-apportionment
+def lowndes(total_population, populations, number_of_seats, ignore=dict()):
+    '''
+    total_population: number: total population of the United States.
+    populations:      maps state code (two letters) to population of that state (number).
+    number_of_seats:  number.
+    Returns: a map from state codes to seats allocated to that state.
+    '''
+    D = total_population / float(number_of_seats)
+
+    def iter(D):
+        quotas = dict()
+        remainders = []
+        total = 0
+        for state, population in populations.items():
+            if population is None or (state in ignore and ignore[state] is None):
+                quotas[state] = None
+                continue;
+
+            # first assign seats based on a rounded down state quota
+            # and keep the relative fraction part:
+            #  fractional of quota divided by floor(quota)
+            quota = population / D
+            apportionment = math.floor(quota)
+            remainder = (quota - apportionment) / apportionment
+
+            total += apportionment
+            quotas[state] = int(apportionment)
+            remainders.append((remainder,state))
+
+        return (total, quotas, remainders)
+
+    total, quotas, remainders = iter(D)
+
+    #if there are no surplus of seats
+    #then we are done
+    if total == number_of_seats:
+        return quotas
+
+    #assign the surplus of seats to the states
+    #with the largest remainders
+    elif total < number_of_seats:
+        surplus = number_of_seats - total
+        remainders.sort(reverse=True)
+
+        for r,s in remainders:
+            if(surplus > 0 and r > 0):
+                if(r > 0):
+                    quotas[s] += 1
+                    surplus -=1
+            else:
+                return  quotas
+
+
+
+# Jefferson's method https://www.maa.org/press/periodicals/convergence/apportioning-representatives-in-the-united-states-congress-jeffersons-method-of-apportionment
+def jefferson(total_population, populations, number_of_seats, ignore=dict()):
+    '''
+    total_population: number: total population of the United States.
+    populations:      maps state code (two letters) to population of that state (number).
+    number_of_seats:  number.
+    Returns: a map from state codes to seats allocated to that state.
+    '''
+    D = total_population / float(number_of_seats)
+    d = 0
+    # A single iteration of jefferson, computes for a given ratio D and a given divisor adjustment d
+    # and returns resulting quotas and total number of apportioned seats
+    def iter(D, d):
+        quotas = dict()
+        total = 0
+        for state, population in populations.items():
+            if population is None or (state in ignore and ignore[state] is None):
+                quotas[state] = None
+                continue;
+
+            quota = population / (D - d)
+            apportionment = math.floor(quota)
+
+            total += apportionment
+            quotas[state] = int(apportionment)
+
+        return (total, quotas)
+
+    while True:
+        total, quotas = iter(D, d)
+        if total == number_of_seats:
+            return quotas
+        elif total < number_of_seats:
+            d = d - 1
+        else:
+            d = d + 1
+
+# Adam's method https://www.maa.org/press/periodicals/convergence/apportioning-representatives-in-the-united-states-congress-adams-method-of-apportionment
+# "Inverted Jefferson"
+def adam(total_population, populations, number_of_seats, ignore=dict()):
+    '''
+    total_population: number: total population of the United States.
+    populations:      maps state code (two letters) to population of that state (number).
+    number_of_seats:  number.
+    Returns: a map from state codes to seats allocated to that state.
+    '''
+    D = total_population / float(number_of_seats)
+    d = 0
+    # A single iteration of jefferson, computes for a given ratio D and a given divisor adjustment d
+    # and returns resulting quotas and total number of apportioned seats
+    def iter(D, d):
+        quotas = dict()
+        total = 0
+        for state, population in populations.items():
+            if population is None or (state in ignore and ignore[state] is None):
+                quotas[state] = None
+                continue;
+
+            quota = population / (D + d)
+            apportionment = math.floor(quota)
+
+            total += apportionment
+            quotas[state] = int(apportionment)
+
+        return (total, quotas)
+
+    while True:
+        total, quotas = iter(D, d)
+        if total == number_of_seats:
+            return quotas
+        elif total < number_of_seats:
+            d = d - 1
+        else:
+            d = d + 1
+
 
 if __name__ == '__main__':
     from experiments import *
