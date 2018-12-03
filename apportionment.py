@@ -5,14 +5,19 @@ import math
 
 
 # Hutington Hill's method https://www.maa.org/press/periodicals/convergence/apportioning-representatives-in-the-united-states-congress-hills-method-of-apportionment
-def huntington_hill(total_population, populations, number_of_seats, ignore=dict()):
+def oneshot_huntington_hill(total_population, populations, number_of_seats, ignore=dict()):
     '''
     total_population: number: total population of the United States.
     populations:      maps state code (two letters) to population of that state (number).
     number_of_seats:  number.
     Returns: a map from state codes to seats allocated to that state.
     '''
-    D = total_population / float(number_of_seats)
+
+    total_population = sum([population for _,population in populations.items()])
+    #total_population = sum([0 if (population is None or (state in ignore and ignore[state] is None)) else population for state,population in populations.items()])
+    D = float(total_population) / float(number_of_seats)
+
+    original_D = D #TODO
 
     # A single iteration of huntington_hill, computes for a given ratio D
     # and returns resulting quotas and total number of apportioned seats
@@ -26,7 +31,7 @@ def huntington_hill(total_population, populations, number_of_seats, ignore=dict(
 
             quota = population / D
             flr = math.floor(quota)
-            cel = math.ceil(quota) # should be different from flr if they're integers
+            cel = flr + 1
 
             # round according to geometric mean
             geomean = math.sqrt(flr * cel)
@@ -34,6 +39,10 @@ def huntington_hill(total_population, populations, number_of_seats, ignore=dict(
 
             total += apportionment
             quotas[state] = int(apportionment)
+
+            assert(apportionment==1 or (D/(population/apportionment)) <= ((population/(apportionment-1))/D))
+            assert(D/(population/(apportionment + 1)) > 1)
+            assert(abs(1 - (D/(population/(apportionment+1)))) > abs(1 - ((population / apportionment) / D)))
 
         return (total, quotas)
 
@@ -45,6 +54,32 @@ def huntington_hill(total_population, populations, number_of_seats, ignore=dict(
             D = D - 1
         else:
             D = D + 1
+
+def iter_huntington_hill(total_population, populations, number_of_seats, ignore=dict()):
+    '''
+    total_population: number: total population of the United States.
+    populations:      maps state code (two letters) to population of that state (number).
+    number_of_seats:  number.
+    Should produce the same results as oneshot_huntington_hill, but does so by iterating over each available seat
+    rather than doing it in one shot
+    '''
+    total_population = sum([population for _,population in populations.items()])
+    apportionments = {}
+    for state in populations.keys():
+        if state not in ignore or ignore[state] is not None:
+            apportionments[state] = 1 #everyone gets at least one seat, avoids div by 0
+
+    priorities = {}
+    for seat in range(number_of_seats - sum(apportionments.values())):
+        for state in apportionments.keys():
+            priorities[state] = populations[state] / math.sqrt(apportionments[state] * (apportionments[state]+1))
+        apportionments[ max(priorities.keys(), key=(lambda state: priorities[state])) ] += 1
+
+    total = sum(apportionments.values())
+    if total == number_of_seats:
+        return apportionments
+            
+
 
 # Webster's method https://www.maa.org/press/periodicals/convergence/apportioning-representatives-in-the-united-states-congress-websters-method-of-apportionment
 def webster(total_population, populations, number_of_seats, ignore=dict()):
