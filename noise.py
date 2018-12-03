@@ -38,5 +38,5 @@ def geometric_noise(epsilon, n):
 def gaussian_noise(epsilon, delta, n):
     #not sure about GS_2(f)
     global_sensitivity_2 = 1
-    sigma = sqrt(2*math.log(1/delta))/epsilon*global_sensitivity_2
+    sigma = math.sqrt(2*math.log(1/delta))/epsilon*global_sensitivity_2
     return np.random.normal(0, sigma, n)
