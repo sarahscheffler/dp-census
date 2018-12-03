@@ -133,14 +133,34 @@ def webster(total_population, populations, number_of_seats, ignore=dict()):
 
         return (total, quotas)
 
+    gone_up = False
+    gone_down = False
+    while not gone_up or not gone_down:
+        total, quotas = iter(D)
+        if total == number_of_seats:
+            return quotas
+        # else: go up/down until we find new D
+        elif total < number_of_seats:
+            gone_down = True
+            D = D - 1
+        else:
+            gone_up = True
+            D = D + 1
+
+    # if we were "bouncing" then binary search to find new D
+    lower_D = D - 1
+    higher_D = D + 1
     while True:
         total, quotas = iter(D)
         if total == number_of_seats:
             return quotas
         elif total < number_of_seats:
-            D = D - 1
+            higher_D = D
+            D = (D + lower_D) / 2
         else:
-            D = D + 1
+            lower_D = D
+            D = (D + higher_D) / 2
+
 
 
 # Dean's method https://www.maa.org/press/periodicals/convergence/apportioning-representatives-in-the-united-states-congress-deans-method-of-apportionment
@@ -174,14 +194,35 @@ def dean(total_population, populations, number_of_seats, ignore=dict()):
 
         return (total, quotas)
 
+    gone_up = False
+    gone_down = False
+    while not gone_up or not gone_down:
+        total, quotas = iter(D)
+        if total == number_of_seats:
+            return quotas
+        # else: go up/down until we find new D
+        elif total < number_of_seats:
+            gone_down = True
+            D = D - 1
+        else:
+            gone_up = True
+            D = D + 1
+
+    # if we were "bouncing" then binary search to find new D
+    lower_D = D - 1
+    higher_D = D + 1
     while True:
         total, quotas = iter(D)
         if total == number_of_seats:
             return quotas
         elif total < number_of_seats:
-            D = D - 1
+            higher_D = D
+            D = (D + lower_D) / 2
         else:
-            D = D + 1
+            lower_D = D
+            D = (D + higher_D) / 2
+
+
 
 
 # Hamilton's method https://www.maa.org/press/periodicals/convergence/apportioning-representatives-in-the-united-states-congress-hamiltons-method-of-apportionment
