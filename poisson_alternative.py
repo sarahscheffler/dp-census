@@ -16,6 +16,8 @@ def poisson_equations(p):
 
     f1 =  math.log(val/lambda_) - epsilon
 
+    # keeping operands small enough so as not to get a 
+    # a math overflow or a math domain error
     op1 = -lambda_
     op2 = 1+math.log(lambda_)
     op2 = op2*val

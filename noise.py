@@ -9,6 +9,8 @@ def poisson_noise(lambda_, c, n):
     val = float(lambda_ + c*math.sqrt(lambda_))
     epsilon =  math.log(val/lambda_)
 
+    # keeping operands small enough so as not to get a 
+    # a math overflow or a math domain error
     try:
         op1 = -lambda_
         op2 = 1+math.log(lambda_)
