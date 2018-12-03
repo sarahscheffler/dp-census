@@ -91,6 +91,10 @@ def run_experiment(apportion_alg_name, count_mech_name):
     # Writes a function that returns the changes that must be made TO THE TRUE APPORTIONMENT in order to equal the
     # NOISY RESULT
 
+    # TODO temporary - we already have results for hh, just move on
+    if apportion_alg_name == "hh":
+        return
+
     print("++++++++++++++++++++++++++++++++++++")
     print("apportionment algorithm: ", apportion_alg_name)
     print("count DP mechanism: ", count_mech_name)
