@@ -9,7 +9,7 @@ REPS = 100
 POPULATIONS_FILE = "census_data/historical_populations.csv"
 APPORTIONMENT_FILE = "census_data/house_apportionments.csv"
 OUTPUT_FOLDER = "results"
-VERBOSE = False
+VERBOSE = True
 
 #########################################################
 # Parsing functions
@@ -101,10 +101,6 @@ def run_experiment():
         true_seats = total_seats_apportioned[year]
         true_answer = huntington_hill(true_population, true_state_pop, true_seats)
 
-        if any(count is None for count in true_state_pop.values()):
-            if VERBOSE: print("Not doing year %d because there is a None count" % year)
-            continue
-
         with open(OUTPUT_FOLDER + "/" + str(year) + ".csv", 'w') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(["epsilon", "rep"] + STATE_ORDER)
@@ -114,13 +110,14 @@ def run_experiment():
                 if VERBOSE: print("---------------------------------")
 
                 for rep in range(REPS):
+
                     noises = laplace_noise(len(true_state_pop), epsilon)
                     population = true_population + sum(noises)
                     state_pop = dict()
                     for (state, i) in zip(true_state_pop.keys(), range(len(true_state_pop))):
-                        state_pop[state] = true_state_pop[state] + noises[i]
+                        state_pop[state] = true_state_pop[state] + noises[i] if true_state_pop[state] is not None else None
                     answer = huntington_hill(population, state_pop, true_seats)
-                    writer.writerow([epsilon, rep] + [answer[st] - true_answer[st] for st in STATE_ORDER])
+
                     if true_answer != answer:
                         if VERBOSE: print("epsilon: %f, year: %d, rep: %d, Different" % (epsilon, year, rep))
                         for state in true_answer:
@@ -129,6 +126,9 @@ def run_experiment():
                                 if VERBOSE: print("    ", state, "+" if diff > 0 else " " if diff == 0 else "", diff)
                     else:
                         if VERBOSE: print("epsilon: %f, year: %d, rep: %d, Same" % (epsilon, year, rep))
+
+                    writer.writerow([epsilon, rep] + [answer[st] - true_answer[st] for st in filter(lambda st: true_answer[st] is
+                        not None, STATE_ORDER)])
     print("Done!  Results are in ", OUTPUT_FOLDER)
 
 
