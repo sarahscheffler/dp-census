@@ -300,7 +300,10 @@ def lowndes(total_population, populations, number_of_seats, ignore=dict()):
             # and keep the relative fraction part:
             #  fractional of quota divided by floor(quota)
             quota = population / D
+            
             apportionment = math.floor(quota)
+            apportionment = apportionment if apportionment>0 else 1
+
             remainder = (quota - apportionment) / apportionment
 
             total += apportionment
@@ -422,7 +425,7 @@ if __name__ == '__main__':
     for year in sorted(domain):
         if year in [1920, 2017]: continue;
 
-        actual_output = dean(total_population[year], state_population[year], total_seats[year], ignore=state_seats[year])
+        actual_output = lowndes(total_population[year], state_population[year], total_seats[year], ignore=state_seats[year])
         if len(sys.argv) > 1:
             for key in sorted(actual_output.keys()):
                 print(key, actual_output[key], state_seats[year][key], '' if actual_output[key] == state_seats[year][key] else '----------------')
