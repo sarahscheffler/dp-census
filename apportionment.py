@@ -115,6 +115,7 @@ def webster(total_population, populations, number_of_seats, ignore=dict()):
     number_of_seats:  number.
     Returns: a map from state codes to seats allocated to that state.
     '''
+    total_population = sum([0 if (population is None or (state in ignore and ignore[state] is None)) else population for state,population in populations.items()])
     D = total_population / float(number_of_seats)
 
     def iter(D):
@@ -171,6 +172,7 @@ def dean(total_population, populations, number_of_seats, ignore=dict()):
     number_of_seats:  number.
     Returns: a map from state codes to seats allocated to that state.
     '''
+    total_population = sum([0 if (population is None or (state in ignore and ignore[state] is None)) else population for state,population in populations.items()])
     D = total_population / float(number_of_seats)
 
     def iter(D):
@@ -233,6 +235,8 @@ def hamilton(total_population, populations, number_of_seats, ignore=dict()):
     number_of_seats:  number.
     Returns: a map from state codes to seats allocated to that state.
     '''
+
+    total_population = sum([0 if (population is None or (state in ignore and ignore[state] is None)) else population for state,population in populations.items()])
     D = total_population / float(number_of_seats)
 
     def iter(D):
@@ -257,6 +261,9 @@ def hamilton(total_population, populations, number_of_seats, ignore=dict()):
         return (total, quotas, remainders)
 
     total, quotas, remainders = iter(D)
+
+    print(total)
+    print("ns: ", number_of_seats)
 
     #if there are no surplus of seats
     #then we are done
@@ -285,6 +292,7 @@ def lowndes(total_population, populations, number_of_seats, ignore=dict()):
     number_of_seats:  number.
     Returns: a map from state codes to seats allocated to that state.
     '''
+    total_population = sum([0 if (population is None or (state in ignore and ignore[state] is None)) else population for state,population in populations.items()])
     D = total_population / float(number_of_seats)
 
     def iter(D):
@@ -343,6 +351,7 @@ def jefferson(total_population, populations, number_of_seats, ignore=dict()):
     number_of_seats:  number.
     Returns: a map from state codes to seats allocated to that state.
     '''
+    total_population = sum([0 if (population is None or (state in ignore and ignore[state] is None)) else population for state,population in populations.items()])
     D = total_population / float(number_of_seats)
     d = 0
     # A single iteration of jefferson, computes for a given ratio D and a given divisor adjustment d
@@ -381,6 +390,7 @@ def adam(total_population, populations, number_of_seats, ignore=dict()):
     number_of_seats:  number.
     Returns: a map from state codes to seats allocated to that state.
     '''
+    total_population = sum([0 if (population is None or (state in ignore and ignore[state] is None)) else population for state,population in populations.items()])
     D = total_population / float(number_of_seats)
     d = 0
     # A single iteration of jefferson, computes for a given ratio D and a given divisor adjustment d
