@@ -95,7 +95,7 @@ def iter_huntington_hill(total_population, populations, number_of_seats, ignore=
             if state not in apportionments.keys():
                 apportionments[state] = None
         return apportionments
-            
+
 def huntington_hill(total_population, populations, number_of_seats, ignore=dict()):
     '''
     total_population: number: total population of the United States.
@@ -186,7 +186,7 @@ def dean(total_population, populations, number_of_seats, ignore=dict()):
             cel = math.ceil(quota)
 
             # round according to harmonic mean
-            harmonicmean = (n*(n+1))/(n+0.5)
+            harmonicmean = (flr*(cel))/(flr+0.5)
             apportionment = cel if quota > harmonicmean else flr
 
             total += apportionment
@@ -422,7 +422,7 @@ if __name__ == '__main__':
     for year in sorted(domain):
         if year in [1920, 2017]: continue;
 
-        actual_output = huntington_hill(total_population[year], state_population[year], total_seats[year], ignore=state_seats[year])
+        actual_output = dean(total_population[year], state_population[year], total_seats[year], ignore=state_seats[year])
         if len(sys.argv) > 1:
             for key in sorted(actual_output.keys()):
                 print(key, actual_output[key], state_seats[year][key], '' if actual_output[key] == state_seats[year][key] else '----------------')
