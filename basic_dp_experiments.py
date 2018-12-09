@@ -113,7 +113,7 @@ def run_experiment(apportion_alg_name, count_mech_name):
         true_population = total_us_pop[year]
         true_state_pop = state_pops[year]
         true_seats = total_seats_apportioned[year]
-        true_answer = apportionment_alg(true_population, true_state_pop, true_seats)
+        true_answer = apportionment_alg(true_state_pop, true_seats)
 
         output_file = OUTPUT_FOLDER + "/" + apportion_alg_name + "/" + count_mech_name + "/" + str(year) + ".csv"
         with open(output_file, 'w') as csvfile:
@@ -135,7 +135,7 @@ def run_experiment(apportion_alg_name, count_mech_name):
                         state_pop = dict()
                         for (state, i) in zip(true_state_pop.keys(), range(len(true_state_pop))):
                             state_pop[state] = true_state_pop[state] + noises[i] if true_state_pop[state] is not None else None
-                        answer = apportionment_alg(population, state_pop, true_seats)
+                        answer = apportionment_alg(state_pop, true_seats)
 
                         if true_answer != answer:
                             if VERBOSE: print("alg: %s, mech: %s, epsilon: %f, year: %d, rep: %d, Different" %

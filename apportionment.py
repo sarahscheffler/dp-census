@@ -4,16 +4,21 @@ Functions that implement interesting apportionment functions
 import math
 
 
+'''
+Different ways of implementing Huntington Hill
+'''
+
+
 # Hutington Hill's method https://www.maa.org/press/periodicals/convergence/apportioning-representatives-in-the-united-states-congress-hills-method-of-apportionment
-def oneshot_huntington_hill(total_population, populations, number_of_seats, ignore=dict()):
+def iter_D_huntington_hill(populations, number_of_seats, ignore=dict()):
     '''
-    total_population: number: total population of the United States.
     populations:      maps state code (two letters) to population of that state (number).
     number_of_seats:  number.
+    ignore:           dict, if a state is in the dict, and is mapped to None, then it is ignored.
     Returns: a map from state codes to seats allocated to that state. (oneshot method, modifies divisor D until it works)
     '''
 
-    total_population = sum([0 if (population is None or (state in ignore and ignore[state] is None)) else population for state,population in populations.items()])
+    total_population = sum([0 if (population is None or (state in ignore and ignore[state] is None)) else population for state, population in populations.items()])
     D = float(total_population) / float(number_of_seats)
 
     # A single iteration of huntington_hill, computes for a given ratio D
@@ -62,60 +67,64 @@ def oneshot_huntington_hill(total_population, populations, number_of_seats, igno
             return quotas
         elif total < number_of_seats:
             higher_D = D
-            D = (D + lower_D) / 2
+            D = (D + lower_D) / 2.0
         else:
             lower_D = D
-            D = (D + higher_D) / 2
+            D = (D + higher_D) / 2.0
 
-def iter_huntington_hill(total_population, populations, number_of_seats, ignore=dict()):
+def iter_seats_huntington_hill(populations, number_of_seats, ignore=dict()):
     '''
-    total_population: number: total population of the United States.
     populations:      maps state code (two letters) to population of that state (number).
     number_of_seats:  number.
+    ignore:           dict, if a state is in the dict, and is mapped to None, then it is ignored.
     Returns: a map from state codes to seats allocated to that state (iterating over seats method)
     '''
+    import heapq
 
-    total_population = sum([0 if (population is None or (state in ignore and ignore[state] is None)) else population for state,population in populations.items()])
-    apportionments = {}
-    for state,population in populations.items():
-        if population is not None and (state not in ignore or ignore[state] is not None):
-            apportionments[state] = 1 #everyone gets at least one seat, avoids div by 0
+    # total population
+    total_population = sum([0 if (population is None or (state in ignore and ignore[state] is None)) else population for state, population in populations.items()])
 
-    priorities = {}
-    for seat in range(number_of_seats - sum(apportionments.values())):
-        for state in apportionments.keys():
-            if populations[state] is None or (state in ignore and ignore[state] is not None):
-                continue
-            priorities[state] = populations[state] / math.sqrt(apportionments[state] * (apportionments[state]+1))
-        apportionments[ max(priorities.keys(), key=(lambda state: priorities[state])) ] += 1
+    # no body has any seats yet
+    apportionments = { state: (None if population is None or (state in ignore and ignore[state] is None) else 0) for state, population in populations.items() }
 
-    total = sum(apportionments.values())
-    if total == number_of_seats:
-        for state in populations.keys():
-            if state not in apportionments.keys():
-                apportionments[state] = None
-        return apportionments
+    # priority queue via min heap
+    priorities = [ (float('-inf'), state) for state, population in populations.items() if not (population is None or (state in ignore and ignore[state] is None)) ]
+    heapq.heapify(priorities) # min heap: priorities are negated to make it a max heap!
+    
+    for i in range(number_of_seats):
+      _, state = heapq.heappop(priorities)
+      apportionments[state] += 1
 
-def huntington_hill(total_population, populations, number_of_seats, ignore=dict()):
+      new_priority = populations[state] / math.sqrt(apportionments[state] * (apportionments[state]+1))
+      heapq.heappush(priorities, (-1 * new_priority, state))
+
+    return apportionments
+
+def huntington_hill(populations, number_of_seats, ignore=dict()):
     '''
-    total_population: number: total population of the United States.
     populations:      maps state code (two letters) to population of that state (number).
     number_of_seats:  number.
+    ignore:           dict, if a state is in the dict, and is mapped to None, then it is ignored.
     Returns: a map from state codes to seats allocated to that state.
     '''
     # iter is faster than oneshot
-    return iter_huntington_hill(total_population, populations, number_of_seats, ignore)
+    return iter_seats_huntington_hill(populations, number_of_seats, ignore)
+
+
+'''
+Webster
+'''
 
 
 # Webster's method https://www.maa.org/press/periodicals/convergence/apportioning-representatives-in-the-united-states-congress-websters-method-of-apportionment
-def webster(total_population, populations, number_of_seats, ignore=dict()):
+def webster(populations, number_of_seats, ignore=dict()):
     '''
-    total_population: number: total population of the United States.
     populations:      maps state code (two letters) to population of that state (number).
     number_of_seats:  number.
+    ignore:           dict, if a state is in the dict, and is mapped to None, then it is ignored.
     Returns: a map from state codes to seats allocated to that state.
     '''
-    total_population = sum([0 if (population is None or (state in ignore and ignore[state] is None)) else population for state,population in populations.items()])
+    total_population = sum([0 if (population is None or (state in ignore and ignore[state] is None)) else population for state, population in populations.items()])
     D = total_population / float(number_of_seats)
 
     def iter(D):
@@ -163,16 +172,20 @@ def webster(total_population, populations, number_of_seats, ignore=dict()):
             D = (D + higher_D) / 2
 
 
+'''
+Dean
+'''
+
 
 # Dean's method https://www.maa.org/press/periodicals/convergence/apportioning-representatives-in-the-united-states-congress-deans-method-of-apportionment
-def dean(total_population, populations, number_of_seats, ignore=dict()):
+def dean(populations, number_of_seats, ignore=dict()):
     '''
-    total_population: number: total population of the United States.
     populations:      maps state code (two letters) to population of that state (number).
     number_of_seats:  number.
+    ignore:           dict, if a state is in the dict, and is mapped to None, then it is ignored.
     Returns: a map from state codes to seats allocated to that state.
     '''
-    total_population = sum([0 if (population is None or (state in ignore and ignore[state] is None)) else population for state,population in populations.items()])
+    total_population = sum([0 if (population is None or (state in ignore and ignore[state] is None)) else population for state, population in populations.items()])
     D = total_population / float(number_of_seats)
 
     def iter(D):
@@ -225,18 +238,21 @@ def dean(total_population, populations, number_of_seats, ignore=dict()):
             D = (D + higher_D) / 2
 
 
+'''
+Hamilton
+'''
 
 
 # Hamilton's method https://www.maa.org/press/periodicals/convergence/apportioning-representatives-in-the-united-states-congress-hamiltons-method-of-apportionment
-def hamilton(total_population, populations, number_of_seats, ignore=dict()):
+def hamilton(populations, number_of_seats, ignore=dict()):
     '''
-    total_population: number: total population of the United States.
     populations:      maps state code (two letters) to population of that state (number).
     number_of_seats:  number.
+    ignore:           dict, if a state is in the dict, and is mapped to None, then it is ignored.
     Returns: a map from state codes to seats allocated to that state.
     '''
 
-    total_population = sum([0 if (population is None or (state in ignore and ignore[state] is None)) else population for state,population in populations.items()])
+    total_population = sum([0 if (population is None or (state in ignore and ignore[state] is None)) else population for state, population in populations.items()])
     D = total_population / float(number_of_seats)
 
     def iter(D):
@@ -284,15 +300,21 @@ def hamilton(total_population, populations, number_of_seats, ignore=dict()):
             else:
                 return  quotas
 
+
+'''
+lowndes
+'''
+
+
 # Lowndes's method https://www.maa.org/press/periodicals/convergence/apportioning-representatives-in-the-united-states-congress-lowndes-method-of-apportionment
-def lowndes(total_population, populations, number_of_seats, ignore=dict()):
+def lowndes(populations, number_of_seats, ignore=dict()):
     '''
-    total_population: number: total population of the United States.
     populations:      maps state code (two letters) to population of that state (number).
     number_of_seats:  number.
+    ignore:           dict, if a state is in the dict, and is mapped to None, then it is ignored.
     Returns: a map from state codes to seats allocated to that state.
     '''
-    total_population = sum([0 if (population is None or (state in ignore and ignore[state] is None)) else population for state,population in populations.items()])
+    total_population = sum([0 if (population is None or (state in ignore and ignore[state] is None)) else population for state, population in populations.items()])
     D = total_population / float(number_of_seats)
 
     def iter(D):
@@ -342,16 +364,20 @@ def lowndes(total_population, populations, number_of_seats, ignore=dict()):
                 return  quotas
 
 
+'''
+Jefferson
+'''
+
 
 # Jefferson's method https://www.maa.org/press/periodicals/convergence/apportioning-representatives-in-the-united-states-congress-jeffersons-method-of-apportionment
-def jefferson(total_population, populations, number_of_seats, ignore=dict()):
+def jefferson(populations, number_of_seats, ignore=dict()):
     '''
-    total_population: number: total population of the United States.
     populations:      maps state code (two letters) to population of that state (number).
     number_of_seats:  number.
+    ignore:           dict, if a state is in the dict, and is mapped to None, then it is ignored.
     Returns: a map from state codes to seats allocated to that state.
     '''
-    total_population = sum([0 if (population is None or (state in ignore and ignore[state] is None)) else population for state,population in populations.items()])
+    total_population = sum([0 if (population is None or (state in ignore and ignore[state] is None)) else population for state, population in populations.items()])
     D = total_population / float(number_of_seats)
     d = 0
     # A single iteration of jefferson, computes for a given ratio D and a given divisor adjustment d
@@ -381,16 +407,22 @@ def jefferson(total_population, populations, number_of_seats, ignore=dict()):
         else:
             d = d + 1
 
+
+'''
+Inverted Jefferson
+'''
+
+
 # Adam's method https://www.maa.org/press/periodicals/convergence/apportioning-representatives-in-the-united-states-congress-adams-method-of-apportionment
 # "Inverted Jefferson"
-def adam(total_population, populations, number_of_seats, ignore=dict()):
+def adam(populations, number_of_seats, ignore=dict()):
     '''
-    total_population: number: total population of the United States.
     populations:      maps state code (two letters) to population of that state (number).
     number_of_seats:  number.
+    ignore:           dict, if a state is in the dict, and is mapped to None, then it is ignored.
     Returns: a map from state codes to seats allocated to that state.
     '''
-    total_population = sum([0 if (population is None or (state in ignore and ignore[state] is None)) else population for state,population in populations.items()])
+    total_population = sum([0 if (population is None or (state in ignore and ignore[state] is None)) else population for state, population in populations.items()])
     D = total_population / float(number_of_seats)
     d = 0
     # A single iteration of jefferson, computes for a given ratio D and a given divisor adjustment d
@@ -427,17 +459,25 @@ if __name__ == '__main__':
 
     years, total_population, state_population = parse_historical_populations()
     _, total_seats, state_seats = parse_historical_seats_apportioned()
+    
+    alg_name = 'huntington_hill'
+    if len(sys.argv) > 1:
+      alg_name = sys.argv[1]
 
     domain = years
-    if len(sys.argv) > 1:
-        domain = map(int, sys.argv[1:])
+    if len(sys.argv) > 2:
+        domain = map(int, sys.argv[2:])
 
     for year in sorted(domain):
         if year in [1920, 2017]: continue;
 
-        actual_output = lowndes(total_population[year], state_population[year], total_seats[year], ignore=state_seats[year])
-        if len(sys.argv) > 1:
+        actual_output = globals()[alg_name](state_population[year], total_seats[year], ignore=state_seats[year])
+
+        if len(sys.argv) > 2:
             for key in sorted(actual_output.keys()):
                 print(key, actual_output[key], state_seats[year][key], '' if actual_output[key] == state_seats[year][key] else '----------------')
         else:
             print(year, actual_output == state_seats[year])
+
+
+
