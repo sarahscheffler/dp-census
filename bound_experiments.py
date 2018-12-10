@@ -44,8 +44,6 @@ if __name__ == '__main__':
 
   years, total_population, state_population = parse_historical_populations()
   _, total_seats, state_seats = parse_historical_seats_apportioned()
-  
-  epsilon = 1 / float(sys.argv[1])
 
   years = list(years)
   if len(sys.argv) > 2:
