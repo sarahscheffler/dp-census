@@ -454,7 +454,7 @@ def adam(populations, number_of_seats, ignore=dict()):
 
 
 if __name__ == '__main__':
-    from experiments import *
+    from parse import *
     import sys
 
     years, total_population, state_population = parse_historical_populations()
