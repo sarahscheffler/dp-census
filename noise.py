@@ -30,13 +30,40 @@ def poisson_noise(lambda_, c, n):
 
 
 def laplace_noise(epsilon, n):
-    return np.random.laplace(scale = 1/epsilon, size = n)
+    return np.random.laplace(scale = 1.0/epsilon, size = n)
 
 def geometric_noise(epsilon, n):
     return scipy.stats.dlaplace.rvs(epsilon, size = n)
 
 def gaussian_noise(epsilon, delta, n):
     #not sure about GS_2(f)
-    global_sensitivity_2 = 1
-    sigma = math.sqrt(2*math.log(1/delta))/epsilon*global_sensitivity_2
+    global_sensitivity_2 = 1.0
+    sigma = math.sqrt( 2.0 * math.log(1.0/delta) ) / epsilon * global_sensitivity_2
     return np.random.normal(0, sigma, n)
+
+
+'''
+Probability of certain events
+'''
+
+def laplace_difference_greater_than_k(epsilon, r, k):
+  if r != 1.0:
+    d = (2 - 2 * r * r) * epsilon
+    d = r / d
+    integrals = 0
+    if k <= 0:  
+      integrals = epsilon*math.exp(k*r/epsilon)/r - r*epsilon*math.exp(k/epsilon)
+    else:
+      integrals = epsilon/r + (epsilon-epsilon*math.exp(-1*k*r/epsilon))/r - r*epsilon - r*(epsilon-epsilon*math.exp(-1*k/epsilon))
+    return 1 - d * integrals
+  else:
+    d = 1.0 / (4 * epsilon)
+    integrals = 0
+    if k <= 0:
+      integrals = epsilon * math.exp(k / epsilon) - (k - epsilon) * math.exp(k/epsilon)
+    else:
+      integrals = 4 * epsilon
+      integrals -= epsilon * math.exp(-1*k / epsilon)
+      integrals -= (k + epsilon) * math.exp(-1 * k / epsilon)
+    return 1 - d * integrals
+
